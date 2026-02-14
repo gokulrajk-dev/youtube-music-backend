@@ -69,6 +69,7 @@ class create_staff_user_views(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleLoginApiView(APIView):
+    permission_classes=[AllowAny]
     def post(self,request):
         token = request.data.get('google_id_token')
 

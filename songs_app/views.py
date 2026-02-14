@@ -132,24 +132,30 @@ class video_songs_views(generics.ListCreateAPIView):
     serializer_class = video_songSerialize
     
 # crud for playlists
-class playlist_views(generics.ListCreateAPIView):
-    authentication_classes=[SessionAuthentication]
-    permission_classes=[IsAuthenticated,isOwnerorReadOnly]
+class playlist_views(OwnerStaffSuperuserQuerysetMixin,generics.ListCreateAPIView):
+    # authentication_classes=[SessionAuthentication]
+    permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=playlistSerializer
 
-    def get_queryset(self):
-        return (
-            Playlist.objects.filter(user=self.request.user).select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')
-        )
-
+    # def get_queryset(self):
+    #     return (
+    #       Playlist.objects.filter(user=self.request.user).select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')  
+    #     )
     # def get(self,request):
     #     data = Playlist.objects.all().select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')
     #     serializer = playlistSerializer(data,many=True)
     #     return Response(serializer.data,200)
 
+    def set_queryset_call(self):
+        return (Playlist.objects.select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists'))
+    
+    def perform_create(self, serializer):
+        return serializer.save(user = self.request.user)
+    
+
 class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes=[SessionAuthentication]
-    permission_classes=[IsAuthenticated,isOwnerorReadOnly]
+    # authentication_classes=[SessionAuthentication]
+    permission_classes=[IsOwnerAndSuperuserOnly]
     queryset =Playlist.objects.all().select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')
     serializer_class =playlistSerializer
 
@@ -322,18 +328,22 @@ class like_and_unlike_views(APIView):
 
 
 
-class like_views(generics.ListAPIView):
+class like_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=likedSerializer
 
-    def get_queryset(self):
-        user = self.request.user
-        queryset =(Like.objects.select_related('user','song','song__album').prefetch_related('song__artist','song__genre','song__album__artists')).order_by('-id')
-        if user.is_superuser or user.is_staff:
-            return queryset
-        return queryset.filter(user=user)
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset =(Like.objects.select_related('user','song','song__album').prefetch_related('song__artist','song__genre','song__album__artists')).order_by('-id')
+    #     if user.is_superuser or user.is_staff:
+    #         return queryset
+    #     return queryset.filter(user=user)
+
+    def set_queryset_call(self):
+        return (Like.objects.select_related('user','song','song__album').prefetch_related('song__artist','song__genre','song__album__artists')).order_by('-id')
     
+
         
 class like_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateAPIView):
     # authentication_classes=[SessionAuthentication]

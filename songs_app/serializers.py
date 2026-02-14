@@ -15,7 +15,7 @@ class ArtistSerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ['genre_name','description']
+        fields = "__all__"
 
 class AlbumSerializer(serializers.ModelSerializer):
     artists = ArtistSerializer(read_only = True,many=True)
@@ -163,24 +163,8 @@ class songs_for_playlist(serializers.ModelSerializer):
         ]
 
 
-# ############################################# playlist Serializer ################
-class playlistSerializer(serializers.ModelSerializer):
-    user = customusserSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(),
-        write_only=True,
-        source='user'
-    )
-    songs = songs_for_playlist(read_only=True,many=True)
-    songs_id=serializers.PrimaryKeyRelatedField(
-        queryset = Songs.objects.all(),
-        write_only=True,
-        many =True,
-        source='songs'
-    )
-    class Meta:
-        model = Playlist
-        fields='__all__'
+# ############################################# histroy Serializer ################
+
 
 class listenhistorySerializer(serializers.ModelSerializer):
     user = customusserSerializer(read_only=True)
@@ -217,24 +201,7 @@ class queueSerializer(serializers.ModelSerializer):
         model= Queue
         fields = "__all__"
 
-class likedSerializer(serializers.ModelSerializer):
-    # user = customusserSerializer(read_only=True)
-    # user auto select
-    # user_id = serializers.PrimaryKeyRelatedField(
-    #     queryset=CustomUser.objects.all(),
-    #     write_only=True,
-    #     source='user'
-    # )
-    song = songSerializer_readonly(read_only=True)
-    songs_id=serializers.PrimaryKeyRelatedField(
-        queryset = Songs.objects.all(),
-        write_only=True,
-        source='song'
-    )
 
-    class Meta:
-        model = Like
-        fields = '__all__'
 
     
 
@@ -254,3 +221,79 @@ class blocksongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Block_songs
         fields ="__all__"
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################################front end producation level serializer ####################################################
+
+
+class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
+    artist = ArtistSerializer(many=True,read_only=True)
+    # album = AlbumSerializer(read_only=True)
+
+
+    class Meta:
+        model = Songs
+        fields =[
+            'id',
+            'artist',
+            'title',
+            'duration',
+            'release_date',
+            'songs_file',
+            'cover_image',
+            'lyrics',
+            'views',
+            'likes_count'
+        ]
+
+
+
+class likedSerializer(serializers.ModelSerializer):
+    # user = customusserSerializer(read_only=True)
+    # user auto select
+    # user_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=CustomUser.objects.all(),
+    #     write_only=True,
+    #     source='user'
+    # )
+    song = pro_songs_for_playlist_like_list_api(read_only=True)
+    songs_id=serializers.PrimaryKeyRelatedField(
+        queryset = Songs.objects.all(),
+        write_only=True,
+        source='song'
+    )
+
+    class Meta:
+        model = Like
+        fields = '__all__'
+
+#######################pro playlist####################
+
+class playlistSerializer(serializers.ModelSerializer):
+    # user = customusserSerializer(read_only=True)
+    # user_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=CustomUser.objects.all(),
+    #     write_only=True,
+    #     source='user'
+    # )
+    songs = pro_songs_for_playlist_like_list_api(read_only=True,many=True)
+    songs_id=serializers.PrimaryKeyRelatedField(
+        queryset = Songs.objects.all(),
+        write_only=True,
+        many =True,
+        source='songs'
+    )
+    class Meta:
+        model = Playlist
+        fields='__all__'

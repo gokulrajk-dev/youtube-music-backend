@@ -60,8 +60,6 @@ class Songs(models.Model):
             self.duration=timedelta(seconds=int(audio.info.length))
             super().save(update_fields=['duration'])
             
-        
-
 class video_song(models.Model):
     song = models.OneToOneField(Songs,related_name='video_song',on_delete=models.CASCADE)
     video_file = models.FileField(upload_to='video_song/',validators=[FileExtensionValidator(allowed_extensions=['mp4','mkv','webm'])],blank=True,null=True)
@@ -76,6 +74,7 @@ class Playlist(models.Model):
     description=models.TextField(null=True,blank=True)
     created_at= models.DateTimeField(auto_now_add=True)
     is_public=models.BooleanField(default=True)
+    playlist_cover_image = models.ImageField(upload_to='playlist_cover_image/',null=True,blank=True)
 
     def __str__(self):
         return self.playlist_name
