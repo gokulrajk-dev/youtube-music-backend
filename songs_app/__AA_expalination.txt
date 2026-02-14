@@ -1,0 +1,7 @@
+1. if we use get_or_create inside the loopup must match the constraint like unique_together(fields).
+2. if we with transaction.atomic() if a update use f() in side the table.object.filter(filter).update(field name = F(update field)) after that must use song.refresh_from_db() for refreash db.   
+3. the importand note thats in this case of use django model permission we only 
+remove the permission that only works if we add the permission is not
+work because all the permission is auto enable ok. set_staff_permission_views is the class name
+4. use all the reverse trace of the table not only for track also use in the frond end.
+ 
