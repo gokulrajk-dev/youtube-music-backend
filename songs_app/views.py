@@ -47,10 +47,16 @@ class OwnerStaffSuperuserQuerysetMixin:
 # crud for artist
 
 class artist_views(viewsets.ModelViewSet):
-    authentication_classes=[SessionAuthentication]
-    permission_classes=[IsSuperUser]
+    # authentication_classes=[SessionAuthentication]
+    permission_classes=[Issuper_user_only_other_readonly]
     queryset = Artist.objects.all()
-    serializer_class = ArtistSerializer
+    # serializer_class = ArtistSerializer
+    def get_serializer_class(self):
+        if self.request.method in ['POST','PUT','PATCH']:
+            return ArtistSerializer
+        if self.action == 'retrieve':
+            return artist_song_list
+        return pro_artist
 
 # crud for genre
 
@@ -63,10 +69,10 @@ class genre_views(viewsets.ModelViewSet):
 # crud for album
 
 class album_views(viewsets.ModelViewSet):
-    authentication_classes=[SessionAuthentication]
+    # authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset=Album.objects.all().prefetch_related('artists')
-    serializer_class=AlbumSerializer
+    serializer_class=album_for_song 
 
 # crud for songs
 # effiecient but not for the scalable.
@@ -91,9 +97,9 @@ class Song_views(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in ['POST','PUT','PATCH']:
             return songsSerializer_writeonly
-        return songSerializer_readonly
-    
-        
+        if self.action == 'retrieve':
+            return songSerializer_readonly
+        return pro_songs_for_playlist_like_list_api
 
 class songs_edit_views(generics.RetrieveDestroyAPIView):
     authentication_classes=[SessionAuthentication]
@@ -165,23 +171,26 @@ class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
 
 
 class listen_history_views_post(APIView):
+    authentication_classes=[SessionAuthentication]
+    permission_classes=[IsOwnerAndSuperuserOnly]
     def post(self,request):
-        user_id = request.data.get("user_id")
+        user_id = request.user
         song_id = request.data.get("songs_id")
         durations = request.data.get("duration")
 
-        if not user_id  or not song_id or not durations :
+        if  not song_id or not durations :
             return Response({"message":"all field is required"})
         
-        user = get_object_or_404(CustomUser,id=user_id)
+        
         song = get_object_or_404(Songs,id = song_id)
         durationss = timedelta(seconds=int(durations))
-        dates = timezone.localdate()
+        # dates = timezone.localdate()
         now = timezone.now()
+        dates = now.date()
             
         with transaction.atomic():
             history,created= listen_History_Song_play_Playback.objects.get_or_create(
-                user=user,
+                user=user_id,
                 song=song,
                 days=dates,
                 defaults={'duration_played':durationss,
@@ -198,10 +207,10 @@ class listen_history_views_post(APIView):
                 history.save()
     
             if int(durations) >=30:
-                one_minute_ago = timezone.now() - timedelta(minutes=1)
+                one_minute_ago = now - timedelta(minutes=1)
 
                 already_count = listen_History_Song_play_Playback.objects.filter(
-                    user=user,
+                    user=user_id,
                     song=song,
                     played_at__gt=one_minute_ago
                 ).exclude(id=history.id).exists()
@@ -220,9 +229,26 @@ class listen_history_views_post(APIView):
         
 
 
-class listen_history_views(generics.ListAPIView):
-    queryset = (
-        listen_History_Song_play_Playback.objects
+class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
+    # authentication_classes=[SessionAuthentication]
+    permission_classes=[IsOwnerAndSuperuserOnly]
+    serializer_class=listenhistorySerializer
+    # queryset = (
+    #     listen_History_Song_play_Playback.objects
+    #     .select_related(
+    #         'user',
+    #         'song',
+    #         'song__album'
+    #     )
+    #     .prefetch_related(
+    #         'song__artist',
+    #         'song__genre',
+    #         'song__album__artists'
+    #     )
+    # ).order_by('-played_at')
+    
+    def set_queryset_call(self):
+        return ( listen_History_Song_play_Playback.objects
         .select_related(
             'user',
             'song',
@@ -234,15 +260,29 @@ class listen_history_views(generics.ListAPIView):
             'song__album__artists'
         )
     )
-    serializer_class=listenhistorySerializer
+    
     
 
 
-class history_edit_views(generics.RetrieveUpdateDestroyAPIView):
+class history_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateDestroyAPIView):
     authentication_classes=[SessionAuthentication]
-    permission_classes=[IsOwnerAndSuperuserOnly,IsAuthenticated]
-    queryset = (
-        listen_History_Song_play_Playback.objects
+    permission_classes=[IsOwnerAndSuperuserOnly]
+    # queryset = (
+    #     listen_History_Song_play_Playback.objects
+    #     .select_related(
+    #         'user',
+    #         'song',
+    #         'song__album'
+    #     )
+    #     .prefetch_related(
+    #         'song__artist',
+    #         'song__genre',
+    #         'song__album__artists'
+    #     )
+    # )
+    serializer_class=listenhistorySerializer
+    def set_queryset_call(self):
+        return ( listen_History_Song_play_Playback.objects
         .select_related(
             'user',
             'song',
@@ -254,7 +294,6 @@ class history_edit_views(generics.RetrieveUpdateDestroyAPIView):
             'song__album__artists'
         )
     )
-    serializer_class=listenhistorySerializer
 
 # crud for queue
 

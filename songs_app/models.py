@@ -66,6 +66,57 @@ class video_song(models.Model):
 
     def __str__(self):
         return f'video for {self.song.title}'
+    
+
+# class MediaAsset(models.Model):
+    song = models.OneToOneField(
+        Songs,
+        related_name="media_asset",
+        on_delete=models.CASCADE
+    )
+
+    original_file = models.FileField(
+        upload_to="songs/source/"
+    )
+
+    file_size = models.BigIntegerField()
+    checksum = models.CharField(max_length=128)
+
+    storage_provider = models.CharField(
+        max_length=50,
+        default="local"  # later: s3
+    )
+
+    processing_status = models.CharField(
+        max_length=20,
+        default="pending"  # pending / processing / completed
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+
+#  main code Stream the song 
+
+class SongStream(models.Model):
+    song = models.OneToOneField(Songs,related_name='stream',on_delete=models.CASCADE)
+
+    hls_master_url = models.URLField()
+
+    # optional bit rate
+
+    hls_bit_64 = models.URLField(null=True,blank=True)
+    hls_bit_128 = models.URLField(null=True,blank=True)
+    hls_bit_256 = models.URLField(null=True,blank=True)
+
+     # Streaming flags
+    is_drm_enabled = models.BooleanField(default=False)
+
+    storage_provider = models.CharField(
+        max_length=50,
+        default="local"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class Playlist(models.Model):
     user=models.ForeignKey(CustomUser,related_name="playlist_user",on_delete=models.CASCADE)
@@ -111,7 +162,7 @@ class listen_History_Song_play_Playback(models.Model):
     user=models.ForeignKey(CustomUser,related_name='history_user',on_delete=models.CASCADE)
     song=models.ForeignKey(Songs,related_name='histroy_song',on_delete=models.CASCADE)
     played_at=models.DateTimeField(auto_now_add=True)
-    days = models.DateTimeField(null=True)
+    days = models.DateField(null=True)
     duration_played=models.DurationField()
     count = models.PositiveBigIntegerField(default=0)
 

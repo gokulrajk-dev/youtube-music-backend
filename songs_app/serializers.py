@@ -163,25 +163,7 @@ class songs_for_playlist(serializers.ModelSerializer):
         ]
 
 
-# ############################################# histroy Serializer ################
 
-
-class listenhistorySerializer(serializers.ModelSerializer):
-    user = customusserSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(),
-        write_only=True,
-        source='user'
-    )
-    song = songSerializer_readonly(read_only=True)
-    songs_id=serializers.PrimaryKeyRelatedField(
-        queryset = Songs.objects.all(),
-        write_only=True,
-        source='song'
-    )
-    class Meta:
-        model = listen_History_Song_play_Playback
-        fields ="__all__"
 
 class queueSerializer(serializers.ModelSerializer):
     user = customusserSerializer(read_only=True)
@@ -222,24 +204,51 @@ class blocksongSerializer(serializers.ModelSerializer):
         model = Block_songs
         fields ="__all__"
 
-
-
-
-
-
-
-
-
-
-
-
-
 #######################################front end producation level serializer ####################################################
 
 
+# back tracking for the any model using related name 
+# class pro_artist(serializers.ModelSerializer):
+#     songs_artist = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = Artist
+#         fields = [
+#             'id',
+#             'artist_name',
+#             'songs_artist'
+#         ]
+
+#     def get_songs_artist(self, obj):
+#         from songs_app.serializers import pro_songs_for_playlist_like_list_api
+#         return pro_songs_for_playlist_like_list_api(
+#             obj.songs_artist.all(),
+#             many=True
+#         ).data
+
+
+class pro_artist(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Artist
+        fields =[
+            'id',
+            'artist_name',
+            'artist_image'
+        ]
+
+class pro_simple_album(serializers.ModelSerializer):
+    class Meta:
+        model = Album
+        fields=[
+            'id'
+        ]
+
+    
+
 class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
-    artist = ArtistSerializer(many=True,read_only=True)
-    # album = AlbumSerializer(read_only=True)
+    artist = pro_artist(many=True,read_only=True)
+    album = pro_simple_album(read_only=True)
 
 
     class Meta:
@@ -247,16 +256,26 @@ class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
         fields =[
             'id',
             'artist',
+            'album',
             'title',
             'duration',
             'release_date',
-            'songs_file',
+            # 'songs_file',
             'cover_image',
-            'lyrics',
-            'views',
-            'likes_count'
+            # 'lyrics',
+            # 'views',
+            # 'likes_count'
         ]
 
+class artist_song_list(serializers.ModelSerializer):
+    songs_artist = pro_songs_for_playlist_like_list_api(many=True,read_only = True)
+
+    class Meta:
+        model = Artist
+        fields = "__all__"
+
+    
+        
 
 
 class likedSerializer(serializers.ModelSerializer):
@@ -296,4 +315,40 @@ class playlistSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Playlist
-        fields='__all__'
+        fields=[
+            'id',
+            'songs',
+            'playlist_name',
+            'playlist_cover_image',
+            'songs_id',
+        ]
+        
+
+
+class album_for_song(serializers.ModelSerializer):
+    song_album = pro_songs_for_playlist_like_list_api(read_only =True,many = True)
+    artists = pro_artist(read_only=True,many=True)
+
+    class Meta:
+        model = Album
+        fields = "__all__"
+
+# ############################################# histroy Serializer ################
+
+
+class listenhistorySerializer(serializers.ModelSerializer):
+    # user = customusserSerializer(read_only=True)
+    # user_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=CustomUser.objects.all(),
+    #     write_only=True,
+    #     source='user'
+    # )
+    song = pro_songs_for_playlist_like_list_api(read_only=True)
+    songs_id=serializers.PrimaryKeyRelatedField(
+        queryset = Songs.objects.all(),
+        write_only=True,
+        source='song'
+    )
+    class Meta:
+        model = listen_History_Song_play_Playback
+        fields ="__all__"
