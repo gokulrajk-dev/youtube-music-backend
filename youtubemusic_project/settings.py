@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "songs_app",
+    'bg_activity',
     # "user_account_app",
     "user_account_app.apps.UserAccountAppConfig",
 ]
@@ -92,6 +93,10 @@ TEMPLATES = [
         },
     },
 ]
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # default

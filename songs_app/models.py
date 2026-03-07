@@ -18,7 +18,6 @@ class Artist(models.Model):
     def __str__(self):
         return self.artist_name
     
-
 class Genre(models.Model):
     genre_name = models.CharField(max_length=20,default='melody')
     description =models.TextField(blank=True)
@@ -43,7 +42,7 @@ class Songs(models.Model):
     title = models.CharField(max_length=50)
     duration =models.DurationField()
     release_date = models.DateTimeField(blank=True)
-    songs_file = models.FileField(upload_to='songs/',validators=[FileExtensionValidator(allowed_extensions=['mp3'])])
+    songs_file = models.FileField(upload_to='songs/',validators=[FileExtensionValidator(allowed_extensions=['mp3'])],null=True,blank=True)
     cover_image = models.ImageField(upload_to='music_image/')
     lyrics=models.TextField(blank=True)
     language=models.CharField(max_length=20)
@@ -61,14 +60,13 @@ class Songs(models.Model):
             super().save(update_fields=['duration'])
             
 class video_song(models.Model):
-    song = models.OneToOneField(Songs,related_name='video_song',on_delete=models.CASCADE)
-    video_file = models.FileField(upload_to='video_song/',validators=[FileExtensionValidator(allowed_extensions=['mp4','mkv','webm'])],blank=True,null=True)
+    song = models.OneToOneField(Songs,related_name='video_songs',on_delete=models.CASCADE)
+    video_file = models.FileField(upload_to='video_songs/',validators=[FileExtensionValidator(allowed_extensions=['mp4','mkv','webm'])],blank=True,null=True)
 
     def __str__(self):
         return f'video for {self.song.title}'
     
-
-# class MediaAsset(models.Model):
+class MediaAsset(models.Model):
     song = models.OneToOneField(
         Songs,
         related_name="media_asset",
@@ -79,8 +77,8 @@ class video_song(models.Model):
         upload_to="songs/source/"
     )
 
-    file_size = models.BigIntegerField()
-    checksum = models.CharField(max_length=128)
+    # file_size = models.BigIntegerField()
+    checksum = models.CharField(max_length=128,blank=True,null=True)
 
     storage_provider = models.CharField(
         max_length=50,

@@ -25,14 +25,13 @@ from .filter import *
 from .models import *
 from .permission import *
 from .serializers import *
+from .tasks import *
 from user_account_app.permission import *
 
 # User = get_user_model()
 
 # all extra function
-
 class OwnerStaffSuperuserQuerysetMixin:
-
     def set_queryset_call(self):
         raise NotImplementedError("you must use the set_queryset_call")
     
@@ -45,7 +44,6 @@ class OwnerStaffSuperuserQuerysetMixin:
         return queryset.filter(user=user)
 
 # crud for artist
-
 class artist_views(viewsets.ModelViewSet):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
@@ -90,7 +88,7 @@ class album_views(viewsets.ModelViewSet):
 
 # efficient and scaleable.
 class Song_views(viewsets.ModelViewSet):
-    # authentication_classes =[SessionAuthentication]
+    authentication_classes =[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
      
@@ -113,9 +111,7 @@ class songs_edit_update_views(generics.UpdateAPIView):
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
     serializer_class=songsSerializer_writeonly
 
-
 class songs_for_playlist_views(APIView):
-
     def get(self,request):
         data = Songs.objects.all().select_related('album').prefetch_related(
             'artist','genre','album__artists'
@@ -128,9 +124,48 @@ class song_in_video_song_views(generics.ListAPIView):
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album','video_song').prefetch_related('artist','genre')
     serializer_class = video_song_in_songs
+
+    # create the song like the producation level
+
+class Media_assets_in_song(APIView):
+    def post(self,request):
+        song_id = request.data.get("song")
+        orginal_song = request.FILES.get("orginal_song")
+
+        if not song_id and not orginal_song:
+            return Response({"message":"the song_id and orginal_song must give value"})
+
+        try:
+            song = Songs.objects.get(id =song_id)
+
+        except Songs.DoesNotExist:
+            return Response({"message":"the song does not exits"},404)
+
+        media_assets = MediaAsset.objects.create(
+            song=song,
+            original_file =orginal_song
+        )
+
+        music_streaming.delay(media_assets.id)
+
+        return Response(
+            {
+                "message": "Song uploaded. Processing started.",
+                "song_id": song.id
+            },
+            status=status.HTTP_201_CREATED
+        )
+    
+    def get(self,request,id):
+        Media_assetss = MediaAsset.objects.get(id=id)
+
+        serializer = MediaAssets_Serializer(Media_assetss)
+
+        Response(serializer.data)
+
+
     
 # crud of video_song
-
 class video_songs_views(generics.ListCreateAPIView):
     authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
@@ -158,7 +193,6 @@ class playlist_views(OwnerStaffSuperuserQuerysetMixin,generics.ListCreateAPIView
     def perform_create(self, serializer):
         return serializer.save(user = self.request.user)
     
-
 class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
@@ -168,7 +202,6 @@ class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
 # crud for listen history
 # measure play count , play time , add views to songs over 30 second , sort by day like
 # youtube music history manage
-
 
 class listen_history_views_post(APIView):
     authentication_classes=[SessionAuthentication]

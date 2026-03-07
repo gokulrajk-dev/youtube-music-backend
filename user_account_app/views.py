@@ -94,7 +94,6 @@ class GoogleLoginApiView(APIView):
     )
 
 # work code for django model permission
-
 class set_staff_permission_views(APIView):
     def get(self,request,gmail):
         # gmail = request.data.get('gmail')

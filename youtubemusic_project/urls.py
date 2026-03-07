@@ -32,6 +32,7 @@ urlpatterns = [
     # proper use of modernviweset
     path("album/", include("songs_app.urls")),
     path("user_accounts/", include("user_account_app.urls")),
+    path("bg_activity/",include("bg_activity.urls")),
 ]+static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:

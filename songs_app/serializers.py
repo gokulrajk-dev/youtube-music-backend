@@ -352,3 +352,12 @@ class listenhistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = listen_History_Song_play_Playback
         fields ="__all__"
+
+
+
+# ####################################################### og assets of song######################################
+
+class MediaAssets_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = MediaAsset
+        fields ="__all__"
