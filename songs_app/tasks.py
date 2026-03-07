@@ -107,5 +107,4 @@ def music_streaming(self,music_path):
         media_assets.processing_status = "failed"
         media_assets.save(update_fields=["processing_status"])
         raise self.retry(countdown=5)
-
-
+    
