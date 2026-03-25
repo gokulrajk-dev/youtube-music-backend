@@ -32,7 +32,6 @@ def get_audio_duration(file_path):
     seconds = float(result.stdout.strip())
     return timedelta(seconds=seconds)
 
-
 def assign_checksum(file_path):
     sha256 =  hashlib.sha256()
     with open(file_path,'rb') as f:
@@ -78,7 +77,7 @@ def music_streaming(self,music_path):
             "-vn",
             "-c:a", "aac",
             "-b:a", "128k",
-            "-hls_time", "10",
+            "-hls_time", "5",
             "-hls_list_size", "0",
             "-hls_segment_filename", segment_path,
             playlist_path

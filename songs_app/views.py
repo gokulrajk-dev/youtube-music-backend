@@ -1,21 +1,12 @@
-from datetime import date, timedelta, timezone
+from datetime import timedelta, timezone
 
-from django.contrib.auth import authenticate, login
 from django.db import transaction
-from django.db.models import F, Max, Q
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.db.models import F
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import ListView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status  # type: ignore
-from rest_framework import filters, generics, pagination, viewsets
-from rest_framework.authentication import (SessionAuthentication,
-                                           TokenAuthentication)
-from rest_framework.decorators import api_view
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
+from rest_framework import generics, viewsets
+from rest_framework.authentication import (SessionAuthentication)
 from rest_framework.permissions import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -88,7 +79,7 @@ class album_views(viewsets.ModelViewSet):
 
 # efficient and scaleable.
 class Song_views(viewsets.ModelViewSet):
-    authentication_classes =[SessionAuthentication]
+    # authentication_classes =[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
      
@@ -156,12 +147,14 @@ class Media_assets_in_song(APIView):
             status=status.HTTP_201_CREATED
         )
     
+class songStream_in_song_get(APIView):
+    
     def get(self,request,id):
-        Media_assetss = MediaAsset.objects.get(id=id)
+        Media_assetss = SongStream.objects.get(id=id)
 
-        serializer = MediaAssets_Serializer(Media_assetss)
+        serializer = songSStremSerializer(Media_assetss)
 
-        Response(serializer.data)
+        return Response(serializer.data)
 
 
     
@@ -204,7 +197,7 @@ class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
 # youtube music history manage
 
 class listen_history_views_post(APIView):
-    authentication_classes=[SessionAuthentication]
+    # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
     def post(self,request):
         user_id = request.user
@@ -232,7 +225,6 @@ class listen_history_views_post(APIView):
                 }
             )
             
-
             if not created :
                 history.duration_played += durationss
                 history.played_at=now
@@ -254,14 +246,9 @@ class listen_history_views_post(APIView):
                     # song.views +=1
                     # song.save(update_fields=['views'])
                 
-
-
-            
             serializer = listenhistorySerializer(history)
             return Response(serializer.data,201)
         
-
-
 class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]

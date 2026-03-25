@@ -74,8 +74,16 @@ class songsSerializer_writeonly(serializers.ModelSerializer):
             'album_id',
         ] 
 
+# declare the song Stream for find the reverse trace using the song 
+class songSStremSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SongStream
+        fields="__all__"
+
+
 class  songSerializer_readonly(serializers.ModelSerializer):
     # READ (nested)
+    stream = songSStremSerializer(read_only=True)
     artist = ArtistSerializer(many=True, read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
     album = AlbumSerializer(read_only=True)
@@ -102,6 +110,7 @@ class  songSerializer_readonly(serializers.ModelSerializer):
             'language',
             'views',
             'likes_count',
+            'stream',
 
         ] 
 
@@ -357,7 +366,3 @@ class listenhistorySerializer(serializers.ModelSerializer):
 
 # ####################################################### og assets of song######################################
 
-class MediaAssets_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = MediaAsset
-        fields ="__all__"

@@ -31,7 +31,7 @@ urlpatterns=[
     path('songs_edit_update_views/<int:pk>/',songs_edit_update_views.as_view()),
     path('songs_for_playlist_views/',songs_for_playlist_views.as_view(),name='song for playlist'),
     path("Media_assets_in_song/",Media_assets_in_song.as_view()),
-    path("Media_assets_in_song/<int:id>/",Media_assets_in_song.as_view()),
+    path("songStream_in_song_get/<int:id>/",songStream_in_song_get.as_view()),
 
     # crud of playlist
     path('playlist_views/',playlist_views.as_view(),name='playlist views'),
