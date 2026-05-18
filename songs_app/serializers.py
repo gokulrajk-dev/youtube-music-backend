@@ -111,9 +111,18 @@ class  songSerializer_readonly(serializers.ModelSerializer):
             'views',
             'likes_count',
             'stream',
+        ]
 
-        ] 
-
+class demo_song_seralizer(serializers.ModelSerializer):
+    artist_count = serializers.IntegerField()
+    class Meta:
+        model = Songs
+        fields =['id','title','artist_count','duration',
+            'release_date',
+            'lyrics',
+            'language',
+            'views',
+            'likes_count',]
 
 class video_songSerialize(serializers.ModelSerializer):
     song_id = serializers.PrimaryKeyRelatedField(
@@ -315,13 +324,19 @@ class playlistSerializer(serializers.ModelSerializer):
     #     write_only=True,
     #     source='user'
     # )
-    songs = pro_songs_for_playlist_like_list_api(read_only=True,many=True)
+
+    
+
     songs_id=serializers.PrimaryKeyRelatedField(
         queryset = Songs.objects.all(),
         write_only=True,
         many =True,
         source='songs'
     )
+
+    songs = pro_songs_for_playlist_like_list_api(read_only =True,many = True)
+
+
     class Meta:
         model = Playlist
         fields=[
@@ -331,6 +346,14 @@ class playlistSerializer(serializers.ModelSerializer):
             'playlist_cover_image',
             'songs_id',
         ]
+        read_only_fields = ['songs']
+        
+# show the playlist for the RetrieveUpdateDestroyAPIView
+class RetrieveUpdateDestroyplaylistSerializer(serializers.ModelSerializer):
+    songs = pro_songs_for_playlist_like_list_api(read_only=True,many=True)
+    class Meta:
+        model = Playlist
+        fields="__all__"
         
 
 
@@ -362,6 +385,12 @@ class listenhistorySerializer(serializers.ModelSerializer):
         model = listen_History_Song_play_Playback
         fields ="__all__"
 
+
+class demo_history_normal_serializer(serializers.Serializer):
+    song = pro_songs_for_playlist_like_list_api(read_only=True,many=True)
+    song_pk = serializers.IntegerField()
+    total_count = serializers.IntegerField()
+    total_duration = serializers.DurationField()  # ✅ correct type
 
 
 # ####################################################### og assets of song######################################

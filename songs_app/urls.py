@@ -56,4 +56,12 @@ urlpatterns=[
     # demo urls for test the video_songs
     path('video_songs_views/',video_songs_views.as_view()),
     path('song_in_video_song_views/',song_in_video_song_views.as_view()),
+
+
+    #  demo views
+    path('demo_song_model/',demo_song_model.as_view()),
+    path('demo_song_edit_model/<str:title>/',demo_song_edit_model.as_view()),
+
+
+    path('demo_recommantation_history/',demo_recommantation_history.as_view())
 ]

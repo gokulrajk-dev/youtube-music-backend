@@ -18,6 +18,7 @@ from .permission import *
 from .serializers import *
 from .tasks import *
 from user_account_app.permission import *
+from django.db.models import Prefetch,Count,Sum, F
 
 # User = get_user_model()
 
@@ -91,7 +92,7 @@ class Song_views(viewsets.ModelViewSet):
         return pro_songs_for_playlist_like_list_api
 
 class songs_edit_views(generics.RetrieveDestroyAPIView):
-    authentication_classes=[SessionAuthentication]
+    # authentication_classes=[SessionAuthentication]
     permission_classes =[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
     serializer_class=songSerializer_readonly
@@ -109,11 +110,11 @@ class songs_for_playlist_views(APIView):
         )
         serializer = songs_for_playlist(data,many=True)
         return Response(serializer.data,200)
-    
+
 class song_in_video_song_views(generics.ListAPIView):
     authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
-    queryset = Songs.objects.all().select_related('album','video_song').prefetch_related('artist','genre')
+    queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre')
     serializer_class = video_song_in_songs
 
     # create the song like the producation level
@@ -156,8 +157,6 @@ class songStream_in_song_get(APIView):
 
         return Response(serializer.data)
 
-
-    
 # crud of video_song
 class video_songs_views(generics.ListCreateAPIView):
     authentication_classes=[SessionAuthentication]
@@ -190,8 +189,39 @@ class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
     queryset =Playlist.objects.all().select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')
-    serializer_class =playlistSerializer
+    serializer_class =RetrieveUpdateDestroyplaylistSerializer
 
+    def post(self,request,*args ,**kwargs):
+        playlist = self.get_object()
+        songs_ids = request.data.get('songs_id',[])
+        action =request.data.get("action")
+
+        if action == "post":
+            if not songs_ids :
+                return Response({"message":"the song id not found"})
+            
+            exist_id = set(playlist.songs.filter(id__in = songs_ids).values_list('id',flat =True))
+
+            nonExist = set(songs_ids) - exist_id
+
+            if not nonExist:
+                return Response({"message":"songs already added"},200)
+            
+            song = Songs.objects.filter(id__in = nonExist)
+            playlist.songs.add(*song)
+            return Response({"message":"the songs added successfully"},201)
+        
+        elif action =="delete":
+            if not songs_ids:
+                return Response({"message":"enter the song id"},404)
+            exist = playlist.songs.filter(id__in = songs_ids)
+
+            if exist:
+                playlist.songs.remove(*exist)
+                return Response({"message":"song delete successfully"},204)
+            else:
+                return Response({"message":"no songs found in the playlist"},200)
+    
 # crud for listen history
 # measure play count , play time , add views to songs over 30 second , sort by day like
 # youtube music history manage
@@ -285,7 +315,7 @@ class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView
 
 
 class history_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateDestroyAPIView):
-    authentication_classes=[SessionAuthentication]
+    # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
     # queryset = (
     #     listen_History_Song_play_Playback.objects
@@ -314,6 +344,8 @@ class history_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdat
             'song__album__artists'
         )
     )
+
+
 
 # crud for queue
 
@@ -411,4 +443,42 @@ class like_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateAP
 
     def set_queryset_call(self):
         return (Like.objects.select_related('user','song','song__album').prefetch_related('song__artist','song__genre','song__album__artists'))
+
+
+
+# demo use to learn the data with optization and manupliation
+
+
+class demo_song_model(generics.ListAPIView):
+    # def get_queryset(self):
+    #     queryset = Songs.objects.all()
+    #     fil = self.request.query_params.get("fil")
+    #     artist = self.request.query_params.get("art")
+
+    #     if fil and artist:
+    #         queryset = queryset.filter(artist__artist_name=artist).exclude(genre__genre_name = fil)
+            
+    #     return queryset
+
+    queryset = Songs.objects.annotate(artist_count = Count('artist')).only('id','title','artist__artist_bio').prefetch_related(Prefetch('artist',queryset=Artist.objects.all())).order_by('title','-id')
+    serializer_class = demo_song_seralizer
+
+class demo_song_edit_model(generics.RetrieveAPIView):
+    queryset = Songs.objects.only('id','title','artist').prefetch_related('artist')
+    serializer_class = songSerializer_readonly
+    lookup_field = "title"
+
+# demo recommandation for music 
+
+
+class demo_recommantation_history(generics.ListAPIView):
+    serializer_class = demo_history_normal_serializer
+
+    queryset = listen_History_Song_play_Playback.objects.values(
+    song_pk =F('song__id')
+).annotate(total_count=Sum('count'),total_duration = Sum('duration_played'))
+    # .annotate(
+    # song_id=F('song__id')
+
+
 

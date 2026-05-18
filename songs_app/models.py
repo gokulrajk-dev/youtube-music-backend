@@ -16,7 +16,7 @@ class Artist(models.Model):
     country = models.CharField(max_length=30,blank=True)
 
     def __str__(self):
-        return self.artist_name
+        return f"{self.artist_name} - {self.artist_bio}"
     
 class Genre(models.Model):
     genre_name = models.CharField(max_length=20,default='melody')

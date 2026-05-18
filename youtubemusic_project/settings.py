@@ -35,9 +35,14 @@ ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS=[
     'https://*.ngrok-free.dev',
+    "https://*.trycloudflare.com",
 ]
 
 SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PHOTO','https')
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 
 # Application definition
 
@@ -114,7 +119,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=20),
     "ROTATE_REFRESH_TOKENS": True,      # IMPORTANT
     "BLACKLIST_AFTER_ROTATION": True,   # IMPORTANT
