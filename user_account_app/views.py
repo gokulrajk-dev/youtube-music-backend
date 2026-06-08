@@ -93,6 +93,32 @@ class GoogleLoginApiView(APIView):
         }
     )
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GoogleSuperUserLoginApiView(APIView):
+    permission_classes=[AllowAny]
+    def post(self,request):
+        token = request.data.get('google_id_token')
+
+        info = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            audience='608508618310-vgu2kr8321kcnomf7i84v04eh32udabk.apps.googleusercontent.com'
+        )
+
+        gmail = info['email']
+        name = info.get('name')
+        picture = info.get('picture')
+
+        user,create =User.objects.get_or_create(gmail = gmail, defaults={"user_name":name,"photo_url":picture})
+    
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        }
+    )
+
 # work code for django model permission
 class set_staff_permission_views(APIView):
     def get(self,request,gmail):

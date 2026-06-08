@@ -1,4 +1,6 @@
 from datetime import timedelta, timezone
+from warnings import filters
+from django.apps import apps
 
 from django.db import transaction
 from django.db.models import F
@@ -7,10 +9,15 @@ from django.utils import timezone
 from rest_framework import status  # type: ignore
 from rest_framework import generics, viewsets
 from rest_framework.authentication import (SessionAuthentication)
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView  # type: ignore
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, pagination, viewsets
 
 from .filter import *
 from .models import *
@@ -21,6 +28,19 @@ from user_account_app.permission import *
 from django.db.models import Prefetch,Count,Sum, F
 
 # User = get_user_model()
+
+# return all the table 
+
+class GetAllTable(APIView):
+    # authentication_classes=[SessionAuthentication]
+    permission_classes=[IsSuperUser]
+    def get(self,request):
+        tables=[]
+        for model in apps.get_models():
+            if model._meta.app_label == "songs_app":
+                tables.append(model.__name__)
+        return Response(tables)
+
 
 # all extra function
 class OwnerStaffSuperuserQuerysetMixin:
@@ -40,6 +60,11 @@ class artist_views(viewsets.ModelViewSet):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Artist.objects.all()
+    filter_backends=[DjangoFilterBackend,
+                    filters.SearchFilter,
+                    filters.OrderingFilter
+                    ]
+    search_fields=['artist_name']
     # serializer_class = ArtistSerializer
     def get_serializer_class(self):
         if self.request.method in ['POST','PUT','PATCH']:
@@ -51,7 +76,7 @@ class artist_views(viewsets.ModelViewSet):
 # crud for genre
 
 class genre_views(viewsets.ModelViewSet):
-    authentication_classes=[SessionAuthentication]
+    # authentication_classes=[SessionAuthentication]
     permission_classes = [Issuper_user_only_other_readonly]
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -62,7 +87,12 @@ class album_views(viewsets.ModelViewSet):
     # authentication_classes=[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset=Album.objects.all().prefetch_related('artists')
-    serializer_class=album_for_song 
+    filter_backends=[DjangoFilterBackend,
+                    filters.SearchFilter,
+                    filters.OrderingFilter
+                    ]
+    search_fields=['title']
+    serializer_class=album_for_song
 
 # crud for songs
 # effiecient but not for the scalable.
@@ -83,13 +113,30 @@ class Song_views(viewsets.ModelViewSet):
     # authentication_classes =[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
-     
+    filter_backends=[DjangoFilterBackend,
+                    filters.SearchFilter,
+                    filters.OrderingFilter
+                    ]
+    search_fields=['title','genre__genre_name']
+    # pagination_class=PageNumberPagination
+    # pagination_class.page_size=10
+
     def get_serializer_class(self):
         if self.request.method in ['POST','PUT','PATCH']:
             return songsSerializer_writeonly
         if self.action == 'retrieve':
             return songSerializer_readonly
         return pro_songs_for_playlist_like_list_api
+
+class search_song_views(generics.ListAPIView):
+    permission_classes =[Issuper_user_only_other_readonly]
+    queryset =Songs.objects.all()
+    serializer_class =search_song_serializer
+    filter_backends=[
+        filters.SearchFilter
+    ]
+    search_fields=['title']
+
 
 class songs_edit_views(generics.RetrieveDestroyAPIView):
     # authentication_classes=[SessionAuthentication]
@@ -283,6 +330,8 @@ class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView
     # authentication_classes=[SessionAuthentication]
     permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=listenhistorySerializer
+    pagination_class=PageNumberPagination
+    pagination_class.page_size=10
     # queryset = (
     #     listen_History_Song_play_Playback.objects
     #     .select_related(
@@ -309,7 +358,7 @@ class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView
             'song__genre',
             'song__album__artists'
         )
-    )
+    ).order_by('-played_at')
     
     
 
@@ -454,10 +503,8 @@ class demo_song_model(generics.ListAPIView):
     #     queryset = Songs.objects.all()
     #     fil = self.request.query_params.get("fil")
     #     artist = self.request.query_params.get("art")
-
     #     if fil and artist:
     #         queryset = queryset.filter(artist__artist_name=artist).exclude(genre__genre_name = fil)
-            
     #     return queryset
 
     queryset = Songs.objects.annotate(artist_count = Count('artist')).only('id','title','artist__artist_bio').prefetch_related(Prefetch('artist',queryset=Artist.objects.all())).order_by('title','-id')
@@ -470,15 +517,10 @@ class demo_song_edit_model(generics.RetrieveAPIView):
 
 # demo recommandation for music 
 
-
 class demo_recommantation_history(generics.ListAPIView):
     serializer_class = demo_history_normal_serializer
-
     queryset = listen_History_Song_play_Playback.objects.values(
     song_pk =F('song__id')
 ).annotate(total_count=Sum('count'),total_duration = Sum('duration_played'))
     # .annotate(
     # song_id=F('song__id')
-
-
-

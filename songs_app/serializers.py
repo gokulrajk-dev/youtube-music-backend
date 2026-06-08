@@ -80,6 +80,10 @@ class songSStremSerializer(serializers.ModelSerializer):
         model = SongStream
         fields="__all__"
 
+class search_song_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Songs
+        fields =['title']
 
 class  songSerializer_readonly(serializers.ModelSerializer):
     # READ (nested)

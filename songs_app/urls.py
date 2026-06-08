@@ -7,6 +7,8 @@ router.register('album',album_views)
 
 
 urlpatterns=[
+    # get all model
+    path('GetAllTable/',GetAllTable.as_view()),
 
     # crud of artist
     path('artist_views/',artist_views.as_view({'get':'list','post':'create'}),name='artist'),
@@ -63,5 +65,8 @@ urlpatterns=[
     path('demo_song_edit_model/<str:title>/',demo_song_edit_model.as_view()),
 
 
-    path('demo_recommantation_history/',demo_recommantation_history.as_view())
+    path('demo_recommantation_history/',demo_recommantation_history.as_view()),
+
+    # search views
+    path('search_song_views/',search_song_views.as_view()),
 ]

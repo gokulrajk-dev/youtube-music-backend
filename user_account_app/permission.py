@@ -58,8 +58,6 @@ class Issuper_user_only_other_readonly(permissions.BasePermission):
             return True
         return False
         
-
-
 class isOwnerorReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user=request.user

@@ -7,6 +7,7 @@ urlpatterns=[
     path("create_staff/",create_staff_user_views.as_view(),name='create staff user'),
     path("get_staff/",get_user.as_view(),name='staff user'),
     path("auth/google/", GoogleLoginApiView.as_view()),
+    path("auth/super_google/",GoogleSuperUserLoginApiView.as_view()),
     path("set_staff_permission_views/<str:gmail>/",set_staff_permission_views.as_view()),
     path("check_login_user/",check_login_user.as_view()),
     path("LogoutUser/",LogoutUser.as_view()),
