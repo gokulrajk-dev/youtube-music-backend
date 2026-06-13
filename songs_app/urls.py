@@ -28,12 +28,13 @@ urlpatterns=[
     # path('songs_views/',songs_views.as_view(),name='genre'),
     # path('songs_create_views/',songs_create_views.as_view()),
     path('Song_views/',Song_views.as_view({'get':'list','post':'create'})),
-    path('Song_demo_edit_views/<int:pk>/',Song_views.as_view({'get':'retrieve','put':'update','delete':'destroy'})),
+    path('Song_views/<int:pk>/',Song_views.as_view({'get':'retrieve','put':'update','delete':'destroy'})),
     path('songs_edit_views/<int:pk>/',songs_edit_views.as_view(),name='genre'),
     path('songs_edit_update_views/<int:pk>/',songs_edit_update_views.as_view()),
     path('songs_for_playlist_views/',songs_for_playlist_views.as_view(),name='song for playlist'),
     path("Media_assets_in_song/",Media_assets_in_song.as_view()),
     path("songStream_in_song_get/<int:id>/",songStream_in_song_get.as_view()),
+    path("SongStreamList/",SongStreamList.as_view()),
 
     # crud of playlist
     path('playlist_views/',playlist_views.as_view(),name='playlist views'),

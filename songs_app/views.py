@@ -26,13 +26,15 @@ from .serializers import *
 from .tasks import *
 from user_account_app.permission import *
 from django.db.models import Prefetch,Count,Sum, F
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 # User = get_user_model()
 
 # return all the table 
 
 class GetAllTable(APIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsSuperUser]
     def get(self,request):
         tables=[]
@@ -57,7 +59,7 @@ class OwnerStaffSuperuserQuerysetMixin:
 
 # crud for artist
 class artist_views(viewsets.ModelViewSet):
-    # authentication_classes=[SessionAuthentication]
+    parser_classes = [MultiPartParser, FormParser]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Artist.objects.all()
     filter_backends=[DjangoFilterBackend,
@@ -69,14 +71,13 @@ class artist_views(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in ['POST','PUT','PATCH']:
             return ArtistSerializer
-        if self.action == 'retrieve':
+        if (self.request.method=="GET" and self.request.user.is_authenticated and self.request.user.is_superuser) or self.action == 'retrieve':
             return artist_song_list
         return pro_artist
 
 # crud for genre
 
 class genre_views(viewsets.ModelViewSet):
-    # authentication_classes=[SessionAuthentication]
     permission_classes = [Issuper_user_only_other_readonly]
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -84,7 +85,7 @@ class genre_views(viewsets.ModelViewSet):
 # crud for album
 
 class album_views(viewsets.ModelViewSet):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[Issuper_user_only_other_readonly]
     queryset=Album.objects.all().prefetch_related('artists')
     filter_backends=[DjangoFilterBackend,
@@ -110,7 +111,6 @@ class album_views(viewsets.ModelViewSet):
 
 # efficient and scaleable.
 class Song_views(viewsets.ModelViewSet):
-    # authentication_classes =[SessionAuthentication]
     permission_classes=[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
     filter_backends=[DjangoFilterBackend,
@@ -124,7 +124,7 @@ class Song_views(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in ['POST','PUT','PATCH']:
             return songsSerializer_writeonly
-        if self.action == 'retrieve':
+        if (self.request.method == "GET" and self.request.user.is_authenticated and self.request.user.is_superuser) or self.action == 'retrieve':
             return songSerializer_readonly
         return pro_songs_for_playlist_like_list_api
 
@@ -139,13 +139,12 @@ class search_song_views(generics.ListAPIView):
 
 
 class songs_edit_views(generics.RetrieveDestroyAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes =[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
     serializer_class=songSerializer_readonly
 
 class songs_edit_update_views(generics.UpdateAPIView):
-    authentication_classes=[SessionAuthentication]
     permission_classes =[Issuper_user_only_other_readonly]
     queryset = Songs.objects.all().select_related('album').prefetch_related('artist','genre','album__artists')
     serializer_class=songsSerializer_writeonly
@@ -203,6 +202,10 @@ class songStream_in_song_get(APIView):
         serializer = songSStremSerializer(Media_assetss)
 
         return Response(serializer.data)
+    
+class SongStreamList(generics.ListAPIView):
+    queryset = SongStream.objects.all()
+    serializer_class=songSStremSerializer
 
 # crud of video_song
 class video_songs_views(generics.ListCreateAPIView):
@@ -213,7 +216,7 @@ class video_songs_views(generics.ListCreateAPIView):
     
 # crud for playlists
 class playlist_views(OwnerStaffSuperuserQuerysetMixin,generics.ListCreateAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=playlistSerializer
 
@@ -233,7 +236,7 @@ class playlist_views(OwnerStaffSuperuserQuerysetMixin,generics.ListCreateAPIView
         return serializer.save(user = self.request.user)
     
 class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     queryset =Playlist.objects.all().select_related('user').prefetch_related('songs','songs__artist','songs__album','songs__genre','songs__album__artists')
     serializer_class =RetrieveUpdateDestroyplaylistSerializer
@@ -274,7 +277,7 @@ class playlist_edit_views(generics.RetrieveUpdateDestroyAPIView):
 # youtube music history manage
 
 class listen_history_views_post(APIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     def post(self,request):
         user_id = request.user
@@ -327,7 +330,7 @@ class listen_history_views_post(APIView):
             return Response(serializer.data,201)
         
 class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=listenhistorySerializer
     pagination_class=PageNumberPagination
@@ -364,7 +367,7 @@ class listen_history_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView
 
 
 class history_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateDestroyAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     # queryset = (
     #     listen_History_Song_play_Playback.objects
@@ -431,7 +434,7 @@ class like__views_post(APIView):
                 return Response({"error":"this song already liked"},400)
             
 class like_and_unlike_views(APIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     def post(self,request):
         user = self.request.user
@@ -469,7 +472,7 @@ class like_and_unlike_views(APIView):
 
 
 class like_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsOwnerAndSuperuserOnly]
     serializer_class=likedSerializer
 
@@ -486,7 +489,7 @@ class like_views(OwnerStaffSuperuserQuerysetMixin,generics.ListAPIView):
 
         
 class like_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes=[IsAuthenticated,IsOwnerAndSuperuserOnly]
     serializer_class=likedSerializer
 

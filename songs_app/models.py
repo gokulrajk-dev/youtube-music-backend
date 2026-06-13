@@ -42,7 +42,7 @@ class Songs(models.Model):
     title = models.CharField(max_length=50)
     duration =models.DurationField()
     release_date = models.DateTimeField(blank=True)
-    songs_file = models.FileField(upload_to='songs/',validators=[FileExtensionValidator(allowed_extensions=['mp3'])],null=True,blank=True)
+    # songs_file = models.FileField(upload_to='songs/',validators=[FileExtensionValidator(allowed_extensions=['mp3'])],null=True,blank=True)
     cover_image = models.ImageField(upload_to='music_image/')
     lyrics=models.TextField(blank=True)
     language=models.CharField(max_length=20)
@@ -54,10 +54,16 @@ class Songs(models.Model):
     
     def save(self,*args,**kwargs):
         super().save(*args, **kwargs)  # save file first
-        if self.songs_file:
-            audio=MP3(self.songs_file.path)
-            self.duration=timedelta(seconds=int(audio.info.length))
+        if self.title:
+            # audio=MP3(self.songs_file.path)
+            # self.duration=timedelta(seconds=int(audio.info.length))
+            self.views =0
+            self.likes_count=0
             super().save(update_fields=['duration'])
+
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
             
 class video_song(models.Model):
     song = models.OneToOneField(Songs,related_name='video_songs',on_delete=models.CASCADE)
@@ -111,7 +117,7 @@ class SongStream(models.Model):
 
     storage_provider = models.CharField(
         max_length=50,
-        default="local"
+        default="local" 
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

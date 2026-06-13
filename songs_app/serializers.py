@@ -57,7 +57,7 @@ class songsSerializer_writeonly(serializers.ModelSerializer):
             'title',
 
             # media
-            'songs_file',
+            
             'cover_image',
 
             # metadata
@@ -104,7 +104,7 @@ class  songSerializer_readonly(serializers.ModelSerializer):
             'album',
 
             # media
-            'songs_file',
+            
             'cover_image',
 
             # metadata
@@ -150,7 +150,7 @@ class video_song_in_songs(serializers.ModelSerializer):
         fields =[
             'title',
             'cover_image',
-            'songs_file',
+            
             'video_song',
             'has_video',
             'duration',
@@ -177,7 +177,7 @@ class songs_for_playlist(serializers.ModelSerializer):
             'title',
             'duration',
             'release_date',
-            'songs_file',
+            
             'cover_image',
             'lyrics',
             'views',
@@ -282,11 +282,8 @@ class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
             'title',
             'duration',
             'release_date',
-            # 'songs_file',
             'cover_image',
-            # 'lyrics',
-            # 'views',
-            # 'likes_count'
+           
         ]
 
 class artist_song_list(serializers.ModelSerializer):
@@ -295,10 +292,6 @@ class artist_song_list(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = "__all__"
-
-    
-        
-
 
 class likedSerializer(serializers.ModelSerializer):
     # user = customusserSerializer(read_only=True)
@@ -362,8 +355,15 @@ class RetrieveUpdateDestroyplaylistSerializer(serializers.ModelSerializer):
 
 
 class album_for_song(serializers.ModelSerializer):
+    artist_id = serializers.PrimaryKeyRelatedField(
+        queryset = Artist.objects.all(),
+        many=True,
+        write_only =True,
+        source='artists',
+    )
     song_album = pro_songs_for_playlist_like_list_api(read_only =True,many = True)
     artists = pro_artist(read_only=True,many=True)
+    
 
     class Meta:
         model = Album

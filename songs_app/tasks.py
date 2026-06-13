@@ -46,7 +46,6 @@ def music_streaming(self,music_path):
     #     return "media_assets song is not exist"
     try:
        song = media_assets.song
-
        media_assets.processing_status = "processing"
        media_assets.save(update_fields=["processing_status"])
 

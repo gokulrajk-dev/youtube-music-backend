@@ -39,7 +39,7 @@ class create_normal_user(generics.CreateAPIView):
     serializer_class=customusserSerializer
 
 class get_user(generics.ListAPIView):
-    # authentication_classes=[SessionAuthentication]
+     
     permission_classes = [IsAuthenticated,IsOwnerAndSuperuserOnly]
     serializer_class=get_all_user
 
@@ -102,7 +102,11 @@ class GoogleSuperUserLoginApiView(APIView):
         info = id_token.verify_oauth2_token(
             token,
             requests.Request(),
-            audience='608508618310-vgu2kr8321kcnomf7i84v04eh32udabk.apps.googleusercontent.com'
+            # audience='608508618310-vgu2kr8321kcnomf7i84v04eh32udabk.apps.googleusercontent.com'
+            audience = [
+    '608508618310-vgu2kr8321kcnomf7i84v04eh32udabk.apps.googleusercontent.com', # Web
+    '608508618310-98i7onudp64dvfhvlsav85t509do0ltu.apps.googleusercontent.com', # Android
+]
         )
 
         gmail = info['email']
