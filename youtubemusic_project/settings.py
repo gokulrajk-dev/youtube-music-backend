@@ -149,7 +149,7 @@ WSGI_APPLICATION = "youtubemusic_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "youtubemusic_project",
+        "NAME": "demo_yt",
         "USER": "root",
         "PASSWORD": "gokul",
         "HOST": "localhost",

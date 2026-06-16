@@ -1,5 +1,4 @@
 from datetime import date, timedelta, timezone
-
 from django.core.validators import FileExtensionValidator
 from django.db import models, transaction
 from django.db.models import Max
@@ -16,7 +15,7 @@ class Artist(models.Model):
     country = models.CharField(max_length=30,blank=True)
 
     def __str__(self):
-        return f"{self.artist_name} - {self.artist_bio}"
+        return f"{self.artist_name}"
     
 class Genre(models.Model):
     genre_name = models.CharField(max_length=20,default='melody')
@@ -28,7 +27,7 @@ class Genre(models.Model):
 class Album(models.Model):
     title = models.CharField(max_length=100)
     artists=models.ManyToManyField(Artist,related_name='album_artist')
-    cover_image = models.ImageField(upload_to='albums/')
+    cover_image = models.ImageField(upload_to='albums/',null=True,blank=True)
     release_date = models.DateField(blank=True, null=True)
     description = models.TextField(blank=True)
 
@@ -40,10 +39,10 @@ class Songs(models.Model):
     genre = models.ManyToManyField(Genre,related_name='songs_genre')
     album=models.ForeignKey(Album,related_name='song_album',on_delete=models.SET_NULL,null=True, blank=True,)
     title = models.CharField(max_length=50)
-    duration =models.DurationField()
-    release_date = models.DateTimeField(blank=True)
+    duration =models.DurationField( default=timedelta(seconds=0),null=True,blank=True)
+    release_date = models.DateField(blank=True,null=True)
     # songs_file = models.FileField(upload_to='songs/',validators=[FileExtensionValidator(allowed_extensions=['mp3'])],null=True,blank=True)
-    cover_image = models.ImageField(upload_to='music_image/')
+    cover_image = models.ImageField(upload_to='music_image/',null=True,blank=True)
     lyrics=models.TextField(blank=True)
     language=models.CharField(max_length=20)
     views=models.PositiveBigIntegerField(blank=True,null=True,default=0)

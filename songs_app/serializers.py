@@ -50,6 +50,11 @@ class songsSerializer_writeonly(serializers.ModelSerializer):
         write_only=True,
         source='album'
     )
+
+    artist = ArtistSerializer(many=True, read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    album = AlbumSerializer(read_only=True)
+
     class Meta:
         model = Songs
         fields = [
@@ -59,6 +64,9 @@ class songsSerializer_writeonly(serializers.ModelSerializer):
             # media
             
             'cover_image',
+            'artist',
+            'genre',
+            'album',
 
             # metadata
             'duration',
@@ -263,14 +271,35 @@ class pro_simple_album(serializers.ModelSerializer):
     class Meta:
         model = Album
         fields=[
-            'id'
+            'id',
+            'cover_image',
+            'title'
         ]
+
+
+# demo for checking serializer
+class pro_artist1(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Artist
+        fields =[
+            'id',
+            'artist_name',
+        ]
+
+class pro_simple_album1(serializers.ModelSerializer):
+    class Meta:
+        model = Album
+        fields=[
+            'id']
+
+# end of the checking serializer
 
     
 
 class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
-    artist = pro_artist(many=True,read_only=True)
-    album = pro_simple_album(read_only=True)
+    artist = pro_artist1(many=True,read_only=True)
+    album = pro_simple_album1(read_only=True)
 
 
     class Meta:
@@ -397,5 +426,27 @@ class demo_history_normal_serializer(serializers.Serializer):
     total_duration = serializers.DurationField()  # ✅ correct type
 
 
-# ####################################################### og assets of song######################################
+# ####################################################### pro genre ######################################
 
+# class ProGenreSerializer(serializers.ModelSerializer):
+#     songs_genre= songSerializer_readonly(read_only=True,many=True)
+
+#     class Meta:
+#         model = Genre
+#         fields = "__all__"
+
+
+class ProGenreSerializer(serializers.ModelSerializer):
+    songs_genre = songSerializer_readonly(read_only=True, many=True)
+    # albums = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Genre
+        fields = "__all__"
+
+    # def get_albums(self, obj):
+    #     albums = Album.objects.filter(
+    #         song_album__genre=obj
+    #     ).distinct()
+
+    #     return AlbumSerializer(albums, many=True).data

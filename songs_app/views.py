@@ -80,7 +80,7 @@ class artist_views(viewsets.ModelViewSet):
 class genre_views(viewsets.ModelViewSet):
     permission_classes = [Issuper_user_only_other_readonly]
     queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+    serializer_class = ProGenreSerializer
 
 # crud for album
 
