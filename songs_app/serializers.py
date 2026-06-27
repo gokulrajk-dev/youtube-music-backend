@@ -291,28 +291,43 @@ class pro_simple_album1(serializers.ModelSerializer):
     class Meta:
         model = Album
         fields=[
-            'id']
+            'id',
+            'title',
+            ]
 
 # end of the checking serializer
 
-    
-
 class pro_songs_for_playlist_like_list_api(serializers.ModelSerializer):
-    artist = pro_artist1(many=True,read_only=True)
-    album = pro_simple_album1(read_only=True)
-
+    # for app use
+    # artist = pro_artist1(many=True,read_only=True)
+    # album = pro_simple_album1(read_only=True)
+    artist=ArtistSerializer(many=True,read_only=True)
+    album = AlbumSerializer(read_only=True)
+    genre = GenreSerializer(read_only=True,many=True)
 
     class Meta:
         model = Songs
         fields =[
-            'id',
-            'artist',
-            'album',
+          'id',
             'title',
+
+            # nested READ
+            'artist',
+            'genre',
+            'album',
+
+            # media
+            
+            'cover_image',
+
+            # metadata
             'duration',
             'release_date',
-            'cover_image',
-           
+            'lyrics',
+            'language',
+            'views',
+            'likes_count',
+    
         ]
 
 class artist_song_list(serializers.ModelSerializer):
@@ -450,3 +465,12 @@ class ProGenreSerializer(serializers.ModelSerializer):
     #     ).distinct()
 
     #     return AlbumSerializer(albums, many=True).data
+
+
+class MediaAssetsSerializer(serializers.ModelSerializer):
+
+    song =  pro_songs_for_playlist_like_list_api(read_only=True)
+
+    class Meta:
+        model = MediaAsset
+        fields ="__all__"

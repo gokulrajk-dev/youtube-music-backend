@@ -69,9 +69,9 @@ class artist_views(viewsets.ModelViewSet):
     search_fields=['artist_name']
     # serializer_class = ArtistSerializer
     def get_serializer_class(self):
-        if self.request.method in ['POST','PUT','PATCH']:
+        if self.request.method in ['POST','PATCH']:
             return ArtistSerializer
-        if (self.request.method=="GET" and self.request.user.is_authenticated and self.request.user.is_superuser) or self.action == 'retrieve':
+        if (self.request.method in ["GET",'PUT'] and self.request.user.is_authenticated and self.request.user.is_superuser) or self.action == 'retrieve':
             return artist_song_list
         return pro_artist
 
@@ -193,6 +193,45 @@ class Media_assets_in_song(APIView):
             },
             status=status.HTTP_201_CREATED
         )
+    
+    def get(self,request):
+        queryset = MediaAsset.objects.select_related('song')
+        serializer = MediaAssetsSerializer(queryset,many=True)
+        return Response(serializer.data)
+
+#  demo api for update and delete
+# class Update_Media_assets_in_song(APIView):
+#     def put(self,request,id):
+#         try:
+#             mediaasset = MediaAsset.objects.get(id=id)
+#         except MediaAsset.DoesNotExist:
+#             return Response({"message":'the media asset is not found'})
+        
+#         if mediaasset :
+#             serializer = MediaAssetsSerializer(mediaasset,data = request.data)
+
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+            
+#         return Response(serializer.errors(),400)
+    
+#     def delete(self, request, id):
+#         try:
+#             obj = MediaAsset.objects.get(id=id)
+#         except MediaAsset.DoesNotExist:
+#             return Response({"error": "Not found"}, status=404)
+
+#         obj.delete()
+#         return Response(
+#             {"message": "Deleted successfully"},
+#             status=204
+#         )
+
+class Update_Media_assets_in_song(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes=[Issuper_user_only_other_readonly]
+    queryset = MediaAsset.objects.select_related("song")
+    serializer_class=MediaAssetsSerializer
     
 class songStream_in_song_get(APIView):
     
@@ -500,7 +539,6 @@ class like_edit_views(OwnerStaffSuperuserQuerysetMixin,generics.RetrieveUpdateAP
 
 # demo use to learn the data with optization and manupliation
 
-
 class demo_song_model(generics.ListAPIView):
     # def get_queryset(self):
     #     queryset = Songs.objects.all()
@@ -527,3 +565,23 @@ class demo_recommantation_history(generics.ListAPIView):
 ).annotate(total_count=Sum('count'),total_duration = Sum('duration_played'))
     # .annotate(
     # song_id=F('song__id')
+
+
+# song filter based on the media assets
+
+class Song_views_filer(viewsets.ModelViewSet):
+    permission_classes = [Issuper_user_only_other_readonly]
+
+    def get_queryset(self):
+        queryset = (
+            Songs.objects
+            .select_related('album')
+            .prefetch_related('artist', 'genre', 'album__artists')
+        )
+
+        if self.request.query_params.get("without_media") == "true":
+            queryset = queryset.filter(media_asset__isnull=True)
+
+        return queryset
+    
+    serializer_class = pro_songs_for_playlist_like_list_api

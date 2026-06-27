@@ -47,9 +47,8 @@ class get_user(generics.ListAPIView):
         user = self.request.user
         queryset =(CustomUser.objects)
 
-        if user.is_superuser or user.is_staff:
-            return queryset.all()
-        return queryset.filter(id=self.request.user.id)
+        if user.is_authenticated:
+            return queryset.filter(id=self.request.user.id)
 
 class create_staff_user_views(APIView):
     permission_classes = [IsAdminUser]

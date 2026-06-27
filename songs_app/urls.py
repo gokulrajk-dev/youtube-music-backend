@@ -33,8 +33,10 @@ urlpatterns=[
     path('songs_edit_update_views/<int:pk>/',songs_edit_update_views.as_view()),
     path('songs_for_playlist_views/',songs_for_playlist_views.as_view(),name='song for playlist'),
     path("Media_assets_in_song/",Media_assets_in_song.as_view()),
+    path("Update_Media_assets_in_song/<int:pk>/",Update_Media_assets_in_song.as_view()),
     path("songStream_in_song_get/<int:id>/",songStream_in_song_get.as_view()),
     path("SongStreamList/",SongStreamList.as_view()),
+    path("Song_views_filer/",Song_views_filer.as_view({'get':'list','post':'create'})),
 
     # crud of playlist
     path('playlist_views/',playlist_views.as_view(),name='playlist views'),
